@@ -15,6 +15,8 @@ From: continuumio/miniconda3
         jupyterlab_latex \
         ipyvuetify \
 
+    conda clean -yf
+
     export EXTENSIONS="\
         @jupyter-widgets/jupyterlab-manager \
         @krassowski/jupyterlab-lsp \
@@ -35,7 +37,7 @@ From: continuumio/miniconda3
     jupyter lab --ip=0.0.0.0
 
 %labels
-    labextensions $EXTENSIONS
+    author anlach
 
 %help
     This container runs JupyterLab on the default port 8888. Since the container is 
@@ -58,4 +60,4 @@ From: continuumio/miniconda3
             sudo umount temp
 
         Run:
-            singularity shell --overlay overlay.img jupyterlab_latest.sif
+            singularity shell --overlay overlay.img conda-jupyterlab.sif
