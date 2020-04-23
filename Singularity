@@ -43,7 +43,7 @@ From: continuumio/miniconda3
     conda installation.
     
     Usage:
-        Create an overaly (Ubuntu/Debian):
+        Create an overlay (Ubuntu/Debian):
             mkdir -p overlay/upper
             dd if=/dev/zero of=overlay.img bs=1M count=1000
             mkfs.ext3 -d overlay overlay.img
