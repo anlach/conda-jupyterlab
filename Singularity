@@ -1,6 +1,9 @@
 Bootstrap: docker
 From: continuumio/miniconda3
 
+%environment
+    export EXTERNAL_IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+
 %post
     apt install dnsutils -y
 
@@ -59,9 +62,8 @@ From: continuumio/miniconda3
         jupyter lab build
     fi
 
-    echo "Starting JupyterLab"
-    IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
-    exec jupyter lab --ip=$IP
+    echo ":::Starting JupyterLab!"
+    exec jupyter lab --ip=0.0.0.0 $*
 
 %labels
     labextensions $EXTENSIONS
@@ -70,21 +72,23 @@ From: continuumio/miniconda3
     This container runs JupyterLab on the default port 8888. Since the container is 
     meant to be used with an overlay image, there are world write permissions on the 
     conda installation.
+
+    If you want to set the provided URL to work for copy/paste, you can set the hostname:
+        sudo hostname -b $(singularity exec conda-jupyterlab_latest.sif echo $EXTERNAL_IP)
     
-    Usage:
-        Create an overlay using -d option of mkfs.ext3:
-            mkdir -p overlay/upper
-            dd if=/dev/zero of=overlay.img bs=1M count=1000
-            mkfs.ext3 -d overlay overlay.img
+    To create an overlay using -d option of mkfs.ext3:
+        mkdir -p overlay/upper
+        dd if=/dev/zero of=overlay.img bs=1M count=1000
+        mkfs.ext3 -d overlay overlay.img
 
-        Create an overlay using sudo:
-            dd if=/dev/zero of=overlay.img bs=1M count=1000
-            mkfs.ext3 overlay.img
-            mkdir temp
-            sudo mount overlay.img temp
-            sudo chown -R $USER:$USER temp
-            mkdir temp/upper
-            sudo umount temp
+    To create an overlay using sudo:
+        dd if=/dev/zero of=overlay.img bs=1M count=1000
+        mkfs.ext3 overlay.img
+        mkdir temp
+        sudo mount overlay.img temp
+        sudo chown -R $USER:$USER temp
+        mkdir temp/upper
+        sudo umount temp
 
-        Run:
-            singularity run --overlay overlay.img conda-jupyterlab_latest.sif
+    Run:
+        singularity run --overlay overlay.img conda-jupyterlab_latest.sif
