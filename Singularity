@@ -36,7 +36,7 @@ From: continuumio/miniconda3
 %runscript
     echo ""
     echo ":::Test for write access"
-    $WTFILE
+    WTFILE=/opt/conda/write_test
     if touch $WTFILE
     then
         echo "...passed"
