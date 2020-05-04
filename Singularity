@@ -29,10 +29,9 @@ From: continuumio/miniconda3
         @jupyterlab/latex \
         jupyter-vue \
         jupyter-vuetify \
-        @axlair/jupyterlab_vim \
     "
     jupyter labextension install $EXTENSIONS
-    jupyter labextension uninstall $EXTENSIONS
+    jupyter labextension disable $EXTENSIONS
 
     chmod -R ugo+w /opt/conda
 
