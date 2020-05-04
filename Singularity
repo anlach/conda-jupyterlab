@@ -2,6 +2,8 @@ Bootstrap: docker
 From: continuumio/miniconda3
 
 %post
+    apt install dnsutils -y
+
     PATH=/opt/conda/bin:$PATH
     conda install -c conda-forge -c bokeh -y \
         jupyterlab \
@@ -20,19 +22,46 @@ From: continuumio/miniconda3
         @krassowski/jupyterlab-lsp \
         @krassowski/jupyterlab_go_to_definition \
         dask-labextension \
-        @ryantam626/jupyterlab_code_formatter \
         @bokeh/jupyter_bokeh \
         @jupyterlab/latex \
+        jupyter-vue \
         jupyter-vuetify \
         @axlair/jupyterlab_vim \
     "
     jupyter labextension install $EXTENSIONS
-    jupyter labextension disable $EXTENSIONS
+    jupyter labextension uninstall $EXTENSIONS
 
     chmod -R ugo+w /opt/conda
 
 %runscript
-    jupyter lab --ip=0.0.0.0
+    echo ""
+    echo ":::Test for write access"
+    $WTFILE
+    if touch $WTFILE
+    then
+        echo "...passed"
+        rm $WTFILE
+    else
+        echo "No write access! You should be using an overlay."
+        exit 1
+    fi
+
+    echo ""
+    echo ":::Test for chmod permissions on JupyterLab staging area"
+    STAGING="/opt/conda/share/jupyter/lab/staging"
+    if chmod u+w $STAGING
+    then 
+        echo "...passed"
+    else 
+        echo "...failed"
+        echo "...removing staging area and rebuilding"
+        rm -rf $STAGING
+        jupyter lab build
+    fi
+
+    echo "Starting JupyterLab"
+    IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+    exec jupyter lab --ip=$IP
 
 %labels
     labextensions $EXTENSIONS
@@ -43,12 +72,12 @@ From: continuumio/miniconda3
     conda installation.
     
     Usage:
-        Create an overlay (Ubuntu/Debian):
+        Create an overlay using -d option of mkfs.ext3:
             mkdir -p overlay/upper
             dd if=/dev/zero of=overlay.img bs=1M count=1000
             mkfs.ext3 -d overlay overlay.img
 
-        Create an overlay (CentOS):
+        Create an overlay using sudo:
             dd if=/dev/zero of=overlay.img bs=1M count=1000
             mkfs.ext3 overlay.img
             mkdir temp
@@ -58,4 +87,4 @@ From: continuumio/miniconda3
             sudo umount temp
 
         Run:
-            singularity shell --overlay overlay.img jupyterlab_latest.sif
+            singularity run --overlay overlay.img conda-jupyterlab_latest.sif
